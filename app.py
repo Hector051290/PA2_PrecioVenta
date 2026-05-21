@@ -1,4 +1,5 @@
 # Librerías
+app_code = """
 import streamlit as st
 import joblib
 import pandas as pd
@@ -93,12 +94,16 @@ if st.button("🚀 Calcular Precio Estimado"):
 """
 
 # Define the content for requirements.txt
-requirements_code = streamlit==1.32.0
+requirements_code = """
+
+streamlit==1.32.0
 pandas==2.1.4
 numpy==1.26.2
 scikit-learn==1.3.2
 joblib==1.3.2
 """
+
+anotaciones_code = """
 
 # Define the content for anotaciones.txt
 # PROMPT UTILIZADO PARA LA CREACIÓN DEL APLICATIVO:
