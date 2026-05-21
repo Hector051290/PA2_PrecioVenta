@@ -1,199 +1,171 @@
-# Librerías
 import streamlit as st
-import joblib
-import pandas as pd
 import numpy as np
+import joblib
+import requests
+import os
+from io import BytesIO
 
-# Configuración de la página
+# ─── Configuración de página ───────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Predicción de Precios de Viviendas",
-    layout="centered"
+    page_title="Predictor de Precio de Propiedad",
+    page_icon="🏠",
+    layout="centered",
 )
 
-# Título principal
-st.title("📊 Simulador de Precios de Viviendas")
+# ─── Estilos personalizados ────────────────────────────────────────────────────
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500&display=swap');
 
-st.write(
-    "Introduzca las características de la propiedad "
-    "para estimar su precio de venta en el mercado."
-)
+    html, body, [class*="css"] {
+        font-family: 'DM Sans', sans-serif;
+    }
+    .hero-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.6rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 0.2rem;
+    }
+    .hero-sub {
+        font-size: 1rem;
+        color: #555;
+        margin-bottom: 1.5rem;
+    }
+    .card {
+        background: #f8f7f4;
+        border-left: 5px solid #c8973a;
+        border-radius: 10px;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 1.2rem;
+    }
+    .result-box {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: white;
+        border-radius: 14px;
+        padding: 2rem;
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+    .result-label {
+        font-size: 0.9rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        opacity: 0.7;
+        margin-bottom: 0.4rem;
+    }
+    .result-price {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #c8973a;
+    }
+    .isil-box {
+        background: #f0ede8;
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        font-size: 0.88rem;
+        color: #444;
+        margin-top: 2.5rem;
+        border: 1px solid #ddd;
+    }
+    .isil-box a { color: #c8973a; text-decoration: none; }
+    .isil-box a:hover { text-decoration: underline; }
+    div[data-testid="stButton"] > button {
+        background: #1a1a2e;
+        color: #c8973a;
+        border: 2px solid #c8973a;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 0.6rem 2rem;
+        width: 100%;
+        transition: all 0.2s;
+    }
+    div[data-testid="stButton"] > button:hover {
+        background: #c8973a;
+        color: #1a1a2e;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# ==========================================
-# BARRA LATERAL
-# ==========================================
+# ─── Constantes ────────────────────────────────────────────────────────────────
+GITHUB_RAW_BASE = "https://raw.githubusercontent.com/ywchiu/riii/refs/heads/master/data/house-prices.csv"
 
-st.sidebar.header("📌 Información del Estudiante")
+ZONA_MAP = {
+    "Norte": 0,
+    "Sur":   1,
+    "Este":  2,
+    "Oeste": 3,
+}
 
-st.sidebar.write("**Nombre:** Hector Salvatierra Valle")
-st.sidebar.write("**Código ISIL:** 46887492")
+# ─── Carga de modelos desde GitHub ─────────────────────────────────────────────
+@st.cache_resource(show_spinner=False)
+def load_model(filename: str):
+    url = GITHUB_RAW_BASE + filename
+    response = requests.get(url)
+    if response.status_code != 200:
+        st.error(f"❌ No se pudo descargar el modelo '{filename}'. Verifica la URL del repositorio.")
+        st.stop()
+    return joblib.load(BytesIO(response.content))
 
-st.sidebar.markdown(
-    "[🔗 Enlace a mi Cuaderno de Google Colab]"
-    "(https://colab.research.google.com/drive/1ZZEZdQGhq_9rmMphs4nqFd_GoaP7TZWL?usp=sharing)"
-)
 
-st.sidebar.divider()
+# ─── Encabezado ────────────────────────────────────────────────────────────────
+st.markdown('<div class="hero-title">🏠 Predictor de Precio</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-sub">Ingresa las características de la propiedad y obtén una estimación de precio al instante.</div>', unsafe_allow_html=True)
 
-# ==========================================
-# SELECCIÓN DEL MODELO
-# ==========================================
+# ─── Formulario de entrada ─────────────────────────────────────────────────────
+with st.container():
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("#### 📐 Datos de la Propiedad")
 
-st.sidebar.header("🤖 Configuración del Modelo")
+    col1, col2 = st.columns(2)
+    with col1:
+        m2          = st.number_input("Metros cuadrados (m²)", min_value=10, max_value=2000, value=80, step=5)
+        habitaciones = st.number_input("Habitaciones", min_value=1, max_value=20, value=3, step=1)
+    with col2:
+        banos = st.number_input("Baños", min_value=1, max_value=10, value=2, step=1)
+        zona  = st.selectbox("Zona", options=list(ZONA_MAP.keys()))
 
-tipo_modelo = st.sidebar.radio(
-    "Seleccione el modelo de Machine Learning:",
-    (
-        "Regresión Lineal",
-        "Random Forest"
+    modelo_seleccionado = st.radio(
+        "Modelo de predicción",
+        options=["Regresión Logística", "Bosque Aleatorio (Random Forest)"],
+        horizontal=True,
     )
-)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ==========================================
-# CARGA DEL MODELO
-# ==========================================
+# ─── Predicción ────────────────────────────────────────────────────────────────
+if st.button("🔍 Obtener Predicción"):
+    with st.spinner("Cargando modelo y calculando..."):
+        if modelo_seleccionado == "Regresión Logística":
+            model = load_model("modelo_regresion_logistica.pkl")
+        else:
+            model = load_model("modelo_bosque.pkl")
 
-try:
+        zona_encoded = ZONA_MAP[zona]
+        features = np.array([[m2, habitaciones, banos, zona_encoded]])
 
-    if tipo_modelo == "Regresión Lineal":
-        modelo = joblib.load(
-            "modelos/modelo_regresion_logistica.pkl"
-        )
+        prediction = model.predict(features)[0]
 
-    else:
-        modelo = joblib.load(
-            "modelos/modelo_bosque.pkl"
-        )
+    st.markdown(f"""
+    <div class="result-box">
+        <div class="result-label">Precio Estimado · {modelo_seleccionado}</div>
+        <div class="result-price">S/ {prediction:,.2f}</div>
+        <div style="opacity:0.6; font-size:0.85rem; margin-top:0.8rem;">
+            {m2} m² &nbsp;·&nbsp; {habitaciones} hab. &nbsp;·&nbsp; {banos} baños &nbsp;·&nbsp; Zona {zona}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-except FileNotFoundError:
-
-    st.error(
-        "⚠️ No se encontraron los archivos .pkl "
-        "en la carpeta 'modelos/'."
-    )
-
-    st.stop()
-
-# ==========================================
-# FORMULARIO
-# ==========================================
-
-st.subheader("🏠 Características de la Propiedad")
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    m2 = st.number_input(
-        "Tamaño de la vivienda en m²:",
-        min_value=10.0,
-        max_value=500.0,
-        value=120.0,
-        step=1.0
-    )
-
-    habitaciones = st.number_input(
-        "Número de Habitaciones:",
-        min_value=1,
-        max_value=10,
-        value=3,
-        step=1
-    )
-
-with col2:
-
-    banos = st.number_input(
-        "Número de Baños:",
-        min_value=1,
-        max_value=10,
-        value=2,
-        step=1
-    )
-
-    zona = st.selectbox(
-        "Zona de la Propiedad:",
-        [
-            "Cono Norte",
-            "Cono Sur",
-            "Cono Este",
-            "Cono Oeste"
-        ]
-    )
-
-# Variable adicional usada en el entrenamiento
-ofertas = st.slider(
-    "Número de Ofertas recibidas previamente:",
-    min_value=1,
-    max_value=4,
-    value=2,
-    step=1
-)
-
-# ==========================================
-# DATAFRAME DE ENTRADA
-# ==========================================
-
-input_df = pd.DataFrame([{
-
-    'm2': m2,
-    'Habitaciones': habitaciones,
-    'Banos': banos,
-    'Ofertas': ofertas,
-
-    # Variables dummy
-    'Zona_Cono Norte': 1 if zona == "Cono Norte" else 0,
-    'Zona_Cono Oeste': 1 if zona == "Cono Oeste" else 0,
-    'Zona_Cono Sur': 1 if zona == "Cono Sur" else 0
-
-}])
-
-# ==========================================
-# ALINEAR COLUMNAS CON EL MODELO
-# ==========================================
-
-if hasattr(modelo, 'feature_names_in_'):
-
-    columnas_entrenamiento = modelo.feature_names_in_
-
-    # Agregar columnas faltantes
-    for col in columnas_entrenamiento:
-
-        if col not in input_df.columns:
-            input_df[col] = 0
-
-    # Reordenar columnas
-    input_df = input_df[columnas_entrenamiento]
-
-# ==========================================
-# BOTÓN DE PREDICCIÓN
-# ==========================================
-
-st.write("---")
-
-if st.button("🚀 Calcular Precio Estimado"):
-
-    try:
-
-        # Predicción
-        prediccion = modelo.predict(input_df)
-
-        # Convertir a número
-        prediccion = float(prediccion[0])
-
-        # Mostrar resultado
-        st.success(
-            f"### 💵 El precio de venta estimado es: "
-            f"${prediccion:,.2f}"
-        )
-
-        st.balloons()
-
-    except Exception as e:
-
-        st.error(
-            f"❌ Ocurrió un error al realizar la predicción:\n\n{e}"
-        )
-
-        st.info(
-            "Revisa que las variables numéricas y "
-            "dummificadas coincidan con el entrenamiento."
-        )
+# ─── Rúbrica ISIL ──────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="isil-box">
+    <strong>📋 Información del Estudiante — ISIL</strong><br><br>
+    <b>Nombre:</b> NOMBRE DEL ESTUDIANTE<br>
+    <b>Código ISIL:</b> CÓDIGO ISIL<br>
+    <b>Cuaderno de Colab:</b>
+    <a href="https://colab.research.google.com/drive/1ZZEZdQGhq_9rmMphs4nqFd_GoaP7TZWL?usp=sharing" target="_blank">
+        Ver cuaderno en Google Colab 🔗
+    </a>
+</div>
+""", unsafe_allow_html=True)
