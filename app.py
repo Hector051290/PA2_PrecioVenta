@@ -138,8 +138,8 @@ if st.button("🔍 Obtener Predicción"):
 st.markdown("""
 <div class="isil-box">
     <strong>📋 Información del Estudiante — ISIL</strong><br><br>
-    <b>Nombre:</b> NOMBRE DEL ESTUDIANTE<br>
-    <b>Código ISIL:</b> CÓDIGO ISIL<br>
+    <b>Nombre:</b> Hector Salvatierra Valle<br>
+    <b>Código ISIL:</b> 46887492 <br>
     <b>Cuaderno de Colab:</b>
     <a href="https://colab.research.google.com/drive/1ZZEZdQGhq_9rmMphs4nqFd_GoaP7TZWL?usp=sharing" target="_blank">
         Ver cuaderno en Google Colab 🔗
