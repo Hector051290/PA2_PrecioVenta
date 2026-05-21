@@ -17,7 +17,7 @@ st.sidebar.write("**Nombre:** [Tu Nombre Completo]")
 st.sidebar.write("**Código ISIL:** [Tu Código ISIL]")
 st.sidebar.markdown("[🔗 Enlace a mi Cuaderno de Google Colab](https://colab.research.google.com/) (Modo Lector)")
 
-st.sidebar.hr()
+st.sidebar.divider()
 
 # Selección del modelo a usar
 st.sidebar.header("🤖 Configuración del Modelo")
