@@ -1,4 +1,4 @@
-# Define the content for app.py
+# Librerías
 import streamlit as st
 import joblib
 import pandas as pd
@@ -13,9 +13,9 @@ st.write("Introduzca las características de la propiedad para estimar su precio
 
 # --- BARRA LATERAL: INFORMACIÓN DEL ESTUDIANTE (Requisito de la Evaluación) ---
 st.sidebar.header("📌 Información del Estudiante")
-st.sidebar.write("**Nombre:** [Tu Nombre Completo]")
-st.sidebar.write("**Código ISIL:** [Tu Código ISIL]")
-st.sidebar.markdown("[🔗 Enlace a mi Cuaderno de Google Colab](https://colab.research.google.com/) (Modo Lector)")
+st.sidebar.write("**Nombre:** Hector Salvatierra Valle")
+st.sidebar.write("**Código ISIL:** 46887492")
+st.sidebar.markdown("[🔗 Enlace a mi Cuaderno de Google Colab](https://colab.research.google.com/drive/1ZZEZdQGhq_9rmMphs4nqFd_GoaP7TZWL?usp=sharing) (Modo Lector)")
 
 st.sidebar.divider()
 
