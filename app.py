@@ -90,7 +90,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ─── Constantes ────────────────────────────────────────────────────────────────
-GITHUB_RAW_BASE = "https://raw.githubusercontent.com/ywchiu/riii/refs/heads/master/data/house-prices.csv"
+GITHUB_RAW_BASE = "https://raw.githubusercontent.com/Hector051290/PA2_PrecioVenta/main/modelos/"
 
 ZONA_MAP = {
     "Norte": 0,
