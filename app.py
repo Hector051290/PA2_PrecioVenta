@@ -93,7 +93,7 @@ if st.button("🚀 Calcular Precio Estimado"):
 """
 
 # Define the content for requirements.txt
-requirements_code = """streamlit==1.32.0
+requirements_code = streamlit==1.32.0
 pandas==2.1.4
 numpy==1.26.2
 scikit-learn==1.3.2
@@ -101,7 +101,7 @@ joblib==1.3.2
 """
 
 # Define the content for anotaciones.txt
-anotaciones_code = """PROMPT UTILIZADO PARA LA CREACIÓN DEL APLICATIVO:
+anotaciones_code = ""PROMPT UTILIZADO PARA LA CREACIÓN DEL APLICATIVO:
 "Necesito que generes una página web en streamlit desde github. Esta pagina contiene dos modelos entrenados para poder obtener el precio de venta de una propiedad. Los modelos fueron generados con joblib, uno se llama modelo_regresion_logistica.pkl y el otro modelo_bosque.pkl. ambos están almacenados en un github en una carpeta llamada modelos. Necesito que el usuario ingrese los siguientes valores: m2, Habitaciones, Banos, Zona. Finalmente agrega un botón para obtener la predicción. Incluye también los requisitos de la rúbrica de ISIL: nombre del estudiante, código ISIL y enlace al cuaderno de Colab en modo lector."
 
 
